@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop_app/providers/cart.dart';
+import 'package:shop_app/providers/orders.dart';
 import 'package:shop_app/providers/products.dart';
 import 'package:shop_app/screens/cart_screem.dart';
 import 'package:shop_app/screens/product_detail_screen.dart';
@@ -20,9 +21,10 @@ class MyApp extends StatelessWidget {
           create: (BuildContext context) => Products(),
         ),
         ChangeNotifierProvider(
-          // For Efficiency: Use create: if you are creating a new instance
-          // (is recommended more than .value Constructor)
           create: (BuildContext context) => Cart(),
+        ),
+        ChangeNotifierProvider(
+          create: (BuildContext context) => Orders(),
         ),
       ],
       child: MaterialApp(
