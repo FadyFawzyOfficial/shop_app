@@ -45,6 +45,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
   }
 
   void _saveForm() {
+    // This will trigger all the validators.
+    // This will return ture if they all return null (means there is no error),
+    // and will return false if at least one validator returns a string (means has an error).
+    final isValid = _form.currentState.validate();
+    if (!isValid) return;
     _form.currentState.save();
     print(_editedProduct.title);
     print(_editedProduct.description);
@@ -87,6 +92,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     price: _editedProduct.price,
                     imageUrl: _editedProduct.imageUrl,
                   );
+                },
+                validator: (value) {
+                  if (value.isEmpty) return 'Please, provide a product title';
+                  return null;
                 },
               ),
               TextFormField(
