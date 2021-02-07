@@ -24,6 +24,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
     imageUrl: '',
   );
 
+  // Just to be sure it's first time to open the Edit Product Screen
+  var _isInit = true;
+
   // You need to dispose your own focus nodes in dispose() method, to be sure
   // that you clear (free up) up memory which they occupy & avoid memory leaks.
   @override
@@ -34,6 +37,27 @@ class _EditProductScreenState extends State<EditProductScreen> {
     _descriptionFocusNode.dispose();
     _imageUrlFocusNode.dispose();
     _imageUrlController.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    // We use didChangeDependencies() because it also runs before build is executed
+    // like initState() which we can't use it to get argument by ModelRoute
+
+    // I just want to make suer I don't run this too often, so I only run the following
+    // logic if isInit is "true" which will be the first time then "false".
+    if (_isInit) {
+      final productId = ModalRoute.of(context).settings.arguments as String;
+      // Check which action I hit Edit existing product or Add new product.
+      if (productId != null) {
+        _editedProduct =
+            Provider.of<Products>(context, listen: false).findById(productId);
+        _imageUrlController.text = _editedProduct.imageUrl;
+      }
+    }
+    // Because didChangeDependencies() will run multiple times, I'll set isInit to "false".
+    _isInit = false;
+    super.didChangeDependencies();
   }
 
   @override
@@ -82,6 +106,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
           child: ListView(
             children: [
               TextFormField(
+                initialValue: _editedProduct.title,
                 decoration: InputDecoration(labelText: 'Title'),
                 textInputAction: TextInputAction.next,
                 // No need for next argument (onFieldSubmitted) to move to the
@@ -105,6 +130,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 },
               ),
               TextFormField(
+                initialValue: _editedProduct.price > 0
+                    ? _editedProduct.price.toString()
+                    : '',
                 decoration: InputDecoration(labelText: 'Price'),
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.next,
@@ -137,6 +165,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 },
               ),
               TextFormField(
+                initialValue: _editedProduct.description,
                 decoration: InputDecoration(labelText: 'Description'),
                 keyboardType: TextInputType.multiline,
                 maxLines: 3,
