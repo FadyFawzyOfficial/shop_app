@@ -10,6 +10,7 @@ class EditProductScreen extends StatefulWidget {
 class _EditProductScreenState extends State<EditProductScreen> {
   final _priceFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
+  final _imageUrlFocusNode = FocusNode();
   final _imageUrlController = TextEditingController();
 
   // You need to dispose your own focus nodes in dispose() method, to be sure
@@ -17,9 +18,21 @@ class _EditProductScreenState extends State<EditProductScreen> {
   @override
   void dispose() {
     super.dispose();
+    _imageUrlFocusNode.removeListener(_updateImageUrl);
     _priceFocusNode.dispose();
     _descriptionFocusNode.dispose();
+    _imageUrlFocusNode.dispose();
     _imageUrlController.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _imageUrlFocusNode.addListener(_updateImageUrl);
+  }
+
+  void _updateImageUrl() {
+    if (!_imageUrlFocusNode.hasFocus) setState(() {});
   }
 
   @override
@@ -95,6 +108,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       keyboardType: TextInputType.url,
                       textInputAction: TextInputAction.done,
                       controller: _imageUrlController,
+                      focusNode: _imageUrlFocusNode,
                       // The onEditingComplete listener is not added in the video because it wasn't needed in the past.
                       // By adding it now and by calling setState() in there (even though it's empty),
                       // we force Flutter to update the screen, hence picking up the latest image value entered by the user.
