@@ -10,6 +10,7 @@ class EditProductScreen extends StatefulWidget {
 class _EditProductScreenState extends State<EditProductScreen> {
   final _priceFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
+  final _imageUrlController = TextEditingController();
 
   // You need to dispose your own focus nodes in dispose() method, to be sure
   // that you clear (free up) up memory which they occupy & avoid memory leaks.
@@ -18,6 +19,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     super.dispose();
     _priceFocusNode.dispose();
     _descriptionFocusNode.dispose();
+    _imageUrlController.dispose();
   }
 
   @override
@@ -64,6 +66,44 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 // Automatically focus in when the previous TextFormField hit
                 // Next button in soft keyboard. [1. Comment and Try]
                 focusNode: _descriptionFocusNode,
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    width: 100,
+                    height: 100,
+                    margin: EdgeInsets.only(top: 8, right: 10),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        width: 1,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    child: _imageUrlController.text.isEmpty
+                        ? Text('Enter a URL')
+                        : FittedBox(
+                            child: Image.network(
+                              _imageUrlController.text,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                  ),
+                  Expanded(
+                    child: TextFormField(
+                      decoration: InputDecoration(labelText: 'Image URL'),
+                      keyboardType: TextInputType.url,
+                      textInputAction: TextInputAction.done,
+                      controller: _imageUrlController,
+                      // The onEditingComplete listener is not added in the video because it wasn't needed in the past.
+                      // By adding it now and by calling setState() in there (even though it's empty),
+                      // we force Flutter to update the screen, hence picking up the latest image value entered by the user.
+                      onEditingComplete: () {
+                        setState(() {});
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
