@@ -69,7 +69,8 @@ class Products with ChangeNotifier {
   void addProduct(Product product) {
     const url =
         'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products.json';
-    http.post(
+    http
+        .post(
       url,
       body: json.encode({
         'title': product.title,
@@ -78,17 +79,20 @@ class Products with ChangeNotifier {
         'price': product.price,
         'isFavorite': product.isFavorite,
       }),
-    );
-    final newProduct = Product(
-      id: DateTime.now().toString(),
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      imageUrl: product.imageUrl,
-    );
-    _items.add(newProduct);
-    // _items.insert(0, newProduct); // at the start of the list
-    notifyListeners();
+    )
+        .then((response) {
+      // print(json.decode(response.body));
+      final newProduct = Product(
+        id: json.decode(response.body)['name'],
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        imageUrl: product.imageUrl,
+      );
+      _items.add(newProduct);
+      // _items.insert(0, newProduct); // at the start of the list
+      notifyListeners();
+    });
   }
 
   void updateProduct(String id, Product newProduct) {
