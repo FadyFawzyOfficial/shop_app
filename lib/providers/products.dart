@@ -66,21 +66,24 @@ class Products with ChangeNotifier {
     return _items.firstWhere((product) => product.id == id);
   }
 
-  Future<void> addProduct(Product product) {
+  // When using async, the function which you use it always returns a future,
+  // that future meight then not yield anything in the end but it always returns a future
+  Future<void> addProduct(Product product) async {
     const url =
         'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products.json';
-    return http
-        .post(
-      url,
-      body: json.encode({
-        'title': product.title,
-        'description': product.description,
-        'imageUrl': product.imageUrl,
-        'price': product.price,
-        'isFavorite': product.isFavorite,
-      }),
-    )
-        .then((response) {
+    try {
+      // We don't have to return future anymore because we automatically have this all wrapped
+      // into a future and that future will also be returned automatically,
+      final response = await http.post(
+        url,
+        body: json.encode({
+          'title': product.title,
+          'description': product.description,
+          'imageUrl': product.imageUrl,
+          'price': product.price,
+          'isFavorite': product.isFavorite,
+        }),
+      );
       // print(json.decode(response.body));
       final newProduct = Product(
         id: json.decode(response.body)['name'],
@@ -92,11 +95,11 @@ class Products with ChangeNotifier {
       _items.add(newProduct);
       // _items.insert(0, newProduct); // at the start of the list
       notifyListeners();
-    }).catchError((error) {
+    } catch (error) {
       print(error);
       // Throw the error to handle it in Widget level
       throw error;
-    });
+    }
   }
 
   void updateProduct(String id, Product newProduct) {

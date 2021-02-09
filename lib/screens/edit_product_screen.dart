@@ -79,7 +79,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     }
   }
 
-  void _saveForm() {
+  void _saveForm() async {
     // This will trigger all the validators.
     // This will return ture if they all return null (means there is no error),
     // and will return false if at least one validator returns a string (means has an error).
@@ -99,11 +99,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
       });
       Navigator.of(context).pop();
     } else {
-      Provider.of<Products>(context, listen: false)
-          .addProduct(_editedProduct)
-          .catchError((error) {
+      try {
+        await Provider.of<Products>(context, listen: false)
+            .addProduct(_editedProduct);
+      } catch (error) {
         // Handle the throwen error and Show dialog that show error message
-        return showDialog<Null>(
+        await showDialog<Null>(
           context: context,
           builder: (context) => AlertDialog(
             title: Text('An error occurred!'),
@@ -118,13 +119,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
             ],
           ),
         );
-        // The following will execute after dialog closed by user
-      }).then((_) {
+      } finally {
         setState(() {
           _isLoading = false;
         });
         Navigator.of(context).pop();
-      });
+      }
     }
   }
 
