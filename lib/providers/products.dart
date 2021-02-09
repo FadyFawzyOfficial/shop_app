@@ -40,6 +40,9 @@ class Products with ChangeNotifier {
     ),
   ];
 
+  static const url =
+      'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products.json';
+
   // var _showFavoritesOnly = false;
 
   List<Product> get items {
@@ -66,11 +69,18 @@ class Products with ChangeNotifier {
     return _items.firstWhere((product) => product.id == id);
   }
 
+  Future<void> fetchAndSetProducts() async {
+    try {
+      final response = await http.get(url);
+      print(json.decode(response.body));
+    } catch (error) {
+      throw (error);
+    }
+  }
+
   // When using async, the function which you use it always returns a future,
   // that future meight then not yield anything in the end but it always returns a future
   Future<void> addProduct(Product product) async {
-    const url =
-        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products.json';
     try {
       // We don't have to return future anymore because we automatically have this all wrapped
       // into a future and that future will also be returned automatically,
