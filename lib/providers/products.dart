@@ -127,9 +127,24 @@ class Products with ChangeNotifier {
     }
   }
 
-  void updateProduct(String id, Product newProduct) {
+  Future<void> updateProduct(String id, Product newProduct) async {
     final productIndex = _items.indexWhere((product) => product.id == id);
     if (productIndex >= 0) {
+      // Since that's dynamic and not constant at compilation time, we can't use
+      // const here anymore though, we have to use final.
+      // Because this will only be final at runtime.
+      final url =
+          'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json';
+      await http.patch(
+        url,
+        body: json.encode({
+          'title': newProduct.title,
+          'description': newProduct.description,
+          'imageUrl': newProduct.imageUrl,
+          'price': newProduct.price,
+          'isFavorite': newProduct.isFavorite,
+        }),
+      );
       _items[productIndex] = newProduct;
       notifyListeners();
     } else
