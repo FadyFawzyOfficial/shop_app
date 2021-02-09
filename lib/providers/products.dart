@@ -152,6 +152,14 @@ class Products with ChangeNotifier {
   }
 
   void deleteProduct(String id) {
+    // You can use async await here if you want to,
+    // but you can also do something which is known as optimistic updating.
+    // Instead I immediately execute this because Dart doesn't block code
+    // execution until this is done and moves ahead to this line before we have
+    // a response from the server.
+    final url =
+        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json';
+    http.delete(url);
     _items.removeWhere((product) => product.id == id);
     notifyListeners();
   }
