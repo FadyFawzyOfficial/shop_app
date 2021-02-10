@@ -152,14 +152,14 @@ class Products with ChangeNotifier {
       print('...');
   }
 
-  void deleteProduct(String id) {
+  Future<void> deleteProduct(String id) async {
     // You can use async await here if you want to,
     // but you can also do something which is known as optimistic updating.
     // Instead I immediately execute this because Dart doesn't block code
     // execution until this is done and moves ahead to this line before we have
     // a response from the server.
     final url =
-        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id';
+        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json';
     final existingProductIndex =
         _items.indexWhere((product) => product.id == id);
     var existingProduct = _items[existingProductIndex];
@@ -168,19 +168,16 @@ class Products with ChangeNotifier {
     // For get and post, the HTTP package would have thrown an error and catchError()
     // method would've kicked off, but here (delete) that is not happening and
     // therefore I want to throw my own error if that's the case.
-    http.delete(url).then((response) {
-      print(response.statusCode);
-      // Check if response status code is greater than or equal than 400 which
-      // means something went wrong and in that case, I want to throw my own error
-      // and not continue with the following code.
-      if (response.statusCode >= 400) {
-        throw HttpException('Could not delete product.');
-      }
-      existingProduct = null;
-    }).catchError((_) {
+    final response = await http.delete(url);
+    print(response.statusCode);
+    // Check if response status code is greater than or equal than 400 which
+    // means something went wrong and in that case, I want to throw my own error
+    // and not continue with the following code.
+    if (response.statusCode >= 400) {
       _items.insert(existingProductIndex, existingProduct);
       notifyListeners();
-    });
-    // _items.removeWhere((product) => product.id == id);
+      throw HttpException('Could not delete product.');
+    }
+    existingProduct = null;
   }
 }
