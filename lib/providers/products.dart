@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shop_app/models/http_exception.dart';
 import 'package:shop_app/providers/product.dart';
 
 class Products with ChangeNotifier {
@@ -164,8 +165,17 @@ class Products with ChangeNotifier {
     var existingProduct = _items[existingProductIndex];
     _items.removeAt(existingProductIndex);
     notifyListeners();
+    // For get and post, the HTTP package would have thrown an error and catchError()
+    // method would've kicked off, but here (delete) that is not happening and
+    // therefore I want to throw my own error if that's the case.
     http.delete(url).then((response) {
       print(response.statusCode);
+      // Check if response status code is greater than or equal than 400 which
+      // means something went wrong and in that case, I want to throw my own error
+      // and not continue with the following code.
+      if (response.statusCode >= 400) {
+        throw HttpException('Could not delete product.');
+      }
       existingProduct = null;
     }).catchError((_) {
       _items.insert(existingProductIndex, existingProduct);
