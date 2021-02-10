@@ -158,9 +158,19 @@ class Products with ChangeNotifier {
     // execution until this is done and moves ahead to this line before we have
     // a response from the server.
     final url =
-        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json';
-    http.delete(url);
-    _items.removeWhere((product) => product.id == id);
+        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id';
+    final existingProductIndex =
+        _items.indexWhere((product) => product.id == id);
+    var existingProduct = _items[existingProductIndex];
+    _items.removeAt(existingProductIndex);
     notifyListeners();
+    http.delete(url).then((response) {
+      print(response.statusCode);
+      existingProduct = null;
+    }).catchError((_) {
+      _items.insert(existingProductIndex, existingProduct);
+      notifyListeners();
+    });
+    // _items.removeWhere((product) => product.id == id);
   }
 }
