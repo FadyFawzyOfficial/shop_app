@@ -19,18 +19,27 @@ class OrderItem {
 }
 
 class Orders with ChangeNotifier {
+  static const url =
+      'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/orders.json';
+
   List<OrderItem> _orders = [];
 
   List<OrderItem> get orders {
     return [..._orders];
   }
 
+  Future<void> fetchOrders() async {
+    try {
+      final response = await http.get(url);
+      print(json.decode(response.body));
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // When using async, the function which you use it always returns a future,
   // that future meight then not yield anything in the end but it always returns a future
   Future<void> addOrder(List<CartItem> cartProducts, double total) async {
-    const url =
-        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/orders.json';
-
     // use one order's timestamp for local and server
     final timestamp = DateTime.now();
 
