@@ -28,7 +28,8 @@ class Orders with ChangeNotifier {
   void addOrder(List<CartItem> cartProducts, double total) {
     const url =
         'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/orders.json';
-    http.post(
+    http
+        .post(
       url,
       body: json.encode({
         'amount': total,
@@ -36,16 +37,17 @@ class Orders with ChangeNotifier {
             cartProducts.map((cartProduct) => cartProduct.toJson())),
         'dateTime': DateTime.now().toString(),
       }),
-    );
-    _orders.insert(
-      0,
-      OrderItem(
-        id: DateTime.now().toString(),
+    )
+        .then((response) {
+      print(json.decode(response.body));
+      final newOrder = OrderItem(
+        id: json.decode(response.body)['name'],
         amount: total,
         products: cartProducts,
         dateTime: DateTime.now(),
-      ),
-    );
-    notifyListeners();
+      );
+      _orders.insert(0, newOrder);
+      notifyListeners();
+    });
   }
 }
