@@ -12,6 +12,14 @@ class CartItem {
     @required this.quantity,
     @required this.price,
   });
+
+  // Convert CartItem Dart Object to Json Object
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'quantity': quantity,
+        'price': price,
+      };
 }
 
 class Cart with ChangeNotifier {
