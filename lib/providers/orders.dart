@@ -25,10 +25,10 @@ class Orders with ChangeNotifier {
     return [..._orders];
   }
 
-  void addOrder(List<CartItem> cartProducts, double total) {
+  Future<void> addOrder(List<CartItem> cartProducts, double total) {
     const url =
         'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/orders.json';
-    http
+    return http
         .post(
       url,
       body: json.encode({
