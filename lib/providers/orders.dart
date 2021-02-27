@@ -48,6 +48,10 @@ class Orders with ChangeNotifier {
       );
       _orders.insert(0, newOrder);
       notifyListeners();
+    }).catchError((error) {
+      print(error);
+      // Throw the error to handle it in Widget level
+      throw error;
     });
   }
 }

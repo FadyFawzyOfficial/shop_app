@@ -24,7 +24,23 @@ class _CartScreenState extends State<CartScreen> {
       cart.items.values.toList(),
       cart.totalAmount,
     )
-        .then((_) {
+        .catchError((error) {
+      // Handle the throwen error and show dialog that show error message
+      return showDialog<Null>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('An error occurred!'),
+          content: Text('Something went wrong!'),
+          actions: [
+            FlatButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Okay'),
+            ),
+          ],
+        ),
+      );
+      // The following will execute after dialog closed by user
+    }).then((_) {
       cart.clear();
       setState(() {
         _isLoading = false;
