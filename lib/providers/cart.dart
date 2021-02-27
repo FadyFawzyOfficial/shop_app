@@ -13,6 +13,13 @@ class CartItem {
     @required this.price,
   });
 
+  factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
+        id: json['id'],
+        title: json['title'],
+        quantity: json['quantity'],
+        price: json['price'],
+      );
+
   // Convert CartItem Dart Object to Json Object
   Map<String, dynamic> toJson() => {
         'id': id,

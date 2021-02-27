@@ -15,6 +15,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
   // Just to be sure it's first time to open the Orders Screen
   // var _isInit = true;
 
+  // For Loading Snipper
+  var _isLoading = false;
+
   @override
   void initState() {
     // In initState, all these of context things don't work
@@ -27,10 +30,21 @@ class _OrdersScreenState extends State<OrdersScreen> {
     // Provider.of<Orders>(context).fetchOrders(); // WON'T WORK!
 
     // => First Approach
-    Future.delayed(Duration.zero).then((_) {
+
+    // The whole other flow of initState finishing up and build being called
+    // will have fisised when this runs. so we need to run setState here.
+    Future.delayed(Duration.zero).then((_) async {
+      // setState to update teh UI because this will actually run after build
+      // was called, even though it's delayed by nothing.
+      setState(() {
+        _isLoading = true;
+      });
       // With listen: false, you could also make that method call WITHOUT the
       // Future delayed(...) workaround too!
-      Provider.of<Orders>(context, listen: false).fetchOrders();
+      await Provider.of<Orders>(context, listen: false).fetchOrders();
+      setState(() {
+        _isLoading = false;
+      });
     });
     super.initState();
   }
@@ -53,10 +67,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
         title: Text('Your Orders'),
       ),
       drawer: AppDrawer(),
-      body: ListView.builder(
-        itemCount: orderData.orders.length,
-        itemBuilder: (context, index) => OrderItem(orderData.orders[index]),
-      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: orderData.orders.length,
+              itemBuilder: (context, index) =>
+                  OrderItem(orderData.orders[index]),
+            ),
     );
   }
 }

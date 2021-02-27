@@ -31,7 +31,25 @@ class Orders with ChangeNotifier {
   Future<void> fetchOrders() async {
     try {
       final response = await http.get(url);
-      print(json.decode(response.body));
+      // print(json.decode(response.body));
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+
+      // So that the following code doesn't run if extracted data is null and
+      // return here to avoid that you run code which would fail if you have no data.
+      if (extractedData == null) return;
+
+      extractedData.forEach((orderId, orderData) {
+        _orders.insert(
+            0,
+            OrderItem(
+              id: orderId,
+              amount: orderData['amount'],
+              products: List<CartItem>.from(orderData['products']
+                  .map((cartItemJson) => CartItem.fromJson(cartItemJson))),
+              dateTime: DateTime.parse(orderData['dateTime']),
+            ));
+      });
+      notifyListeners();
     } catch (error) {
       throw error;
     }

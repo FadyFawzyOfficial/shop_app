@@ -74,6 +74,11 @@ class Products with ChangeNotifier {
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
+
+      // So that the following code doesn't run if extracted data is null and
+      // return here to avoid that you run code which would fail if you have no data.
+      if (extractedData == null) return;
+
       final List<Product> loadedProducts = [];
       extractedData.forEach((key, value) {
         loadedProducts.add(
