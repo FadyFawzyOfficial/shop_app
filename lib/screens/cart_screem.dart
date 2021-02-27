@@ -4,14 +4,84 @@ import 'package:shop_app/providers/cart.dart' show Cart;
 import 'package:shop_app/providers/orders.dart';
 import 'package:shop_app/widgets/cart_item.dart';
 
-class CartScreen extends StatefulWidget {
+class CartScreen extends StatelessWidget {
   static const routeName = '/cart';
 
   @override
-  _CartScreenState createState() => _CartScreenState();
+  Widget build(BuildContext context) {
+    final cart = Provider.of<Cart>(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Your Cart'),
+      ),
+      body: Column(
+        children: [
+          Card(
+            margin: EdgeInsets.all(15),
+            child: Padding(
+              padding: EdgeInsets.all(8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  Spacer(),
+                  Chip(
+                    label: Text(
+                      '\$${cart.totalAmount}',
+                      style: TextStyle(
+                          color:
+                              // 'title' is deprecated and souldn't be used.
+                              // The modern term is headline6.
+                              Theme.of(context)
+                                  .primaryTextTheme
+                                  .headline6
+                                  .color),
+                    ),
+                    backgroundColor: Theme.of(context).primaryColor,
+                  ),
+                  OrderButton(cart: cart),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 10),
+          Expanded(
+            child: ListView.builder(
+              itemCount: cart.items.length,
+              itemBuilder: (context, index) => CartItem(
+                cart.items.values.toList()[index].id,
+                cart.items.keys.toList()[index],
+                cart.items.values.toList()[index].price,
+                cart.items.values.toList()[index].quantity,
+                cart.items.values.toList()[index].title,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _CartScreenState extends State<CartScreen> {
+// We put this into a separate widget with setState() (StatefulWidget), so we now
+// only re-execute this build method instead of that entire build
+// method up there (in the CartScreen) so we rebuild less which is not bad.
+class OrderButton extends StatefulWidget {
+  const OrderButton({
+    Key key,
+    @required this.cart,
+  }) : super(key: key);
+
+  final Cart cart;
+
+  @override
+  _OrderButtonState createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
   // To show loading indicator or not
   var _isLoading = false;
 
@@ -51,72 +121,16 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cart = Provider.of<Cart>(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Your Cart'),
-      ),
-      body: Column(
-        children: [
-          Card(
-            margin: EdgeInsets.all(15),
-            child: Padding(
-              padding: EdgeInsets.all(8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Spacer(),
-                  Chip(
-                    label: Text(
-                      '\$${cart.totalAmount}',
-                      style: TextStyle(
-                          color:
-                              // 'title' is deprecated and souldn't be used.
-                              // The modern term is headline6.
-                              Theme.of(context)
-                                  .primaryTextTheme
-                                  .headline6
-                                  .color),
-                    ),
-                    backgroundColor: Theme.of(context).primaryColor,
-                  ),
-                  _isLoading
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: CircularProgressIndicator(),
-                        )
-                      : FlatButton(
-                          child: Text('Order Now'.toUpperCase()),
-                          textColor: Theme.of(context).primaryColor,
-                          onPressed:
-                              // disable 'Order Now' button if the cart is empty
-                              cart.items.isEmpty
-                                  ? null
-                                  : () => _saveOrder(cart),
-                        ),
-                ],
-              ),
-            ),
-          ),
-          SizedBox(height: 10),
-          Expanded(
-            child: ListView.builder(
-              itemCount: cart.items.length,
-              itemBuilder: (context, index) => CartItem(
-                cart.items.values.toList()[index].id,
-                cart.items.keys.toList()[index],
-                cart.items.values.toList()[index].price,
-                cart.items.values.toList()[index].quantity,
-                cart.items.values.toList()[index].title,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return FlatButton(
+      child: _isLoading
+          ? CircularProgressIndicator()
+          : Text('Order Now'.toUpperCase()),
+      textColor: Theme.of(context).primaryColor,
+      onPressed:
+          // disable 'Order Now' button if the cart is empty
+          (widget.cart.items.isEmpty || _isLoading)
+              ? null
+              : () => _saveOrder(widget.cart),
     );
   }
 }
