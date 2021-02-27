@@ -15,18 +15,21 @@ class _CartScreenState extends State<CartScreen> {
   // To show loading indicator or not
   var _isLoading = false;
 
-  void _saveOrder(Cart cart) {
+  void _saveOrder(Cart cart) async {
     setState(() {
       _isLoading = true;
     });
-    Provider.of<Orders>(context, listen: false)
-        .addOrder(
-      cart.items.values.toList(),
-      cart.totalAmount,
-    )
-        .catchError((error) {
+    try {
+      await Provider.of<Orders>(context, listen: false).addOrder(
+        cart.items.values.toList(),
+        cart.totalAmount,
+      );
+      // If the order is successfully added to the server without any kind of exception
+      // Clear the cart list, otherwise leave it as it is
+      cart.clear();
+    } catch (error) {
       // Handle the throwen error and show dialog that show error message
-      return showDialog<Null>(
+      await showDialog<Null>(
         context: context,
         builder: (context) => AlertDialog(
           title: Text('An error occurred!'),
@@ -39,13 +42,11 @@ class _CartScreenState extends State<CartScreen> {
           ],
         ),
       );
-      // The following will execute after dialog closed by user
-    }).then((_) {
-      cart.clear();
+    } finally {
       setState(() {
         _isLoading = false;
       });
-    });
+    }
   }
 
   @override

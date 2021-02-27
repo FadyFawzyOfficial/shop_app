@@ -25,20 +25,25 @@ class Orders with ChangeNotifier {
     return [..._orders];
   }
 
-  Future<void> addOrder(List<CartItem> cartProducts, double total) {
+  // When using async, the function which you use it always returns a future,
+  // that future meight then not yield anything in the end but it always returns a future
+  Future<void> addOrder(List<CartItem> cartProducts, double total) async {
     const url =
-        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/orders.json';
-    return http
-        .post(
-      url,
-      body: json.encode({
-        'amount': total,
-        'products': List<dynamic>.from(
-            cartProducts.map((cartProduct) => cartProduct.toJson())),
-        'dateTime': DateTime.now().toString(),
-      }),
-    )
-        .then((response) {
+        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/orders';
+
+    // We don't have to return future anymore because we automatically have this all wrapped
+    // into a future and that future will also be returned automatically,
+    try {
+      final response = await http.post(
+        url,
+        body: json.encode({
+          'amount': total,
+          'products': List<dynamic>.from(
+              cartProducts.map((cartProduct) => cartProduct.toJson())),
+          'dateTime': DateTime.now().toString(),
+        }),
+      );
+
       print(json.decode(response.body));
       final newOrder = OrderItem(
         id: json.decode(response.body)['name'],
@@ -48,10 +53,10 @@ class Orders with ChangeNotifier {
       );
       _orders.insert(0, newOrder);
       notifyListeners();
-    }).catchError((error) {
+    } catch (error) {
       print(error);
       // Throw the error to handle it in Widget level
       throw error;
-    });
+    }
   }
 }
