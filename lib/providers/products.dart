@@ -180,4 +180,40 @@ class Products with ChangeNotifier {
     }
     existingProduct = null;
   }
+
+  void _toggleProductFavoriteStatus(Product product) {
+    product.toggleFavoriteStatus();
+    // To update (remove unfavorite item) the 'Only Favorites' Screen
+    // immediately when unfavorite an item.
+    notifyListeners();
+  }
+
+  Future<void> updateFavoriteStatus(String id) async {
+    // Get the index of the product with the given id
+    final productIndex = _items.indexWhere((product) => product.id == id);
+    var product = _items[productIndex];
+    // Check that if the product in the list or not?
+    if (productIndex >= 0) {
+      _toggleProductFavoriteStatus(product);
+      final url =
+          'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json';
+      final response = await http.patch(
+        url,
+        body: json.encode(
+          {
+            'isFavorite': product.isFavorite,
+          },
+        ),
+      );
+      // The HTTP package only throws its own error for get and post requests
+      // if the server returns an error status code.
+      // For patch, put, delete, it doesn't do that.
+      print(response.statusCode);
+      if (response.statusCode >= 400) {
+        _toggleProductFavoriteStatus(product);
+        throw HttpException('Could not update product.');
+      }
+      product = null;
+    }
+  }
 }
