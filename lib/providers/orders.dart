@@ -29,7 +29,10 @@ class Orders with ChangeNotifier {
   // that future meight then not yield anything in the end but it always returns a future
   Future<void> addOrder(List<CartItem> cartProducts, double total) async {
     const url =
-        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/orders';
+        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/orders.json';
+
+    // use one order's timestamp for local and server
+    final timestamp = DateTime.now();
 
     // We don't have to return future anymore because we automatically have this all wrapped
     // into a future and that future will also be returned automatically,
@@ -40,7 +43,10 @@ class Orders with ChangeNotifier {
           'amount': total,
           'products': List<dynamic>.from(
               cartProducts.map((cartProduct) => cartProduct.toJson())),
-          'dateTime': DateTime.now().toString(),
+          // convert to an Iso8601String which is a uniform string
+          // representation of dates,  which we can later easily convert back
+          // into a DateTime object when we load this into Dart again.
+          'dateTime': timestamp.toIso8601String(),
         }),
       );
 
@@ -49,7 +55,7 @@ class Orders with ChangeNotifier {
         id: json.decode(response.body)['name'],
         amount: total,
         products: cartProducts,
-        dateTime: DateTime.now(),
+        dateTime: timestamp,
       );
       _orders.insert(0, newOrder);
       notifyListeners();
