@@ -31,21 +31,15 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
     // => First Approach
 
-    // The whole other flow of initState finishing up and build being called
-    // will have fisised when this runs. so we need to run setState here.
-    Future.delayed(Duration.zero).then((_) async {
-      // setState to update teh UI because this will actually run after build
-      // was called, even though it's delayed by nothing.
-      setState(() {
-        _isLoading = true;
-      });
-      // With listen: false, you could also make that method call WITHOUT the
-      // Future delayed(...) workaround too!
-      await Provider.of<Orders>(context, listen: false).fetchOrders();
-      setState(() {
-        _isLoading = false;
-      });
-    });
+    // This will run before build runs, so we can just set it true
+    _isLoading = true;
+
+    // With listen: false, you could also make that method call WITHOUT the
+    // Future delayed(...) workaround too!
+    // This will work as well if you use listen: false here.
+    Provider.of<Orders>(context, listen: false)
+        .fetchOrders()
+        .then((_) => setState(() => _isLoading = false));
     super.initState();
   }
 
