@@ -4,70 +4,50 @@ import 'package:shop_app/providers/orders.dart' show Orders;
 import 'package:shop_app/widgets/app_drawer.dart';
 import 'package:shop_app/widgets/order_item.dart';
 
-class OrdersScreen extends StatefulWidget {
+class OrdersScreen extends StatelessWidget {
   static const routeName = '/orders';
 
   @override
-  _OrdersScreenState createState() => _OrdersScreenState();
-}
-
-class _OrdersScreenState extends State<OrdersScreen> {
-  // Just to be sure it's first time to open the Orders Screen
-  // var _isInit = true;
-
-  // For Loading Snipper
-  var _isLoading = false;
-
-  @override
-  void initState() {
-    // In initState, all these of context things don't work
-    // Like ModalRoute.of(context) and so on ...
-    // Because the widget is not fully wired up with everything here.
-    // So therefore we can't do that here.
-
-    // Important: If you add listen: false, you CAN use this in initState()!
-    // Workarounds are only needed if you don't set listen to false.
-    // Provider.of<Orders>(context).fetchOrders(); // WON'T WORK!
-
-    // => First Approach
-
-    // This will run before build runs, so we can just set it true
-    _isLoading = true;
-
-    // With listen: false, you could also make that method call WITHOUT the
-    // Future delayed(...) workaround too!
-    // This will work as well if you use listen: false here.
-    Provider.of<Orders>(context, listen: false)
-        .fetchOrders()
-        .then((_) => setState(() => _isLoading = false));
-    super.initState();
-  }
-
-  // => Second Approach
-  // @override
-  // void didChangeDependencies() {
-  //   if (_isInit) {
-  //     Provider.of<Orders>(context).fetchOrders();
-  //   }
-  //   _isInit = false;
-  //   super.didChangeDependencies();
-  // }
-
-  @override
   Widget build(BuildContext context) {
-    final orderData = Provider.of<Orders>(context);
+    // This print statement to be sure the build method should now build one time.
+    print('building orders');
+    // Don't set up the listener here for Orders data
+    // final orderData = Provider.of<Orders>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Your Orders'),
       ),
       drawer: AppDrawer(),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: orderData.orders.length,
-              itemBuilder: (context, index) =>
-                  OrderItem(orderData.orders[index]),
-            ),
+      body:
+          // FutureBuilder Widget takes a future and then automatically starts listening
+          // to that. So it adds the then and the catch error method for you as developer.
+          // And it takes a builder which will get the current snapshot to current state
+          // of your future so that you can build different content based on what your future return.
+          FutureBuilder(
+        future: Provider.of<Orders>(context, listen: false).fetchOrders(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting)
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          if (snapshot.error != null)
+            // Do error handling stuff here
+            return Center(
+              child: Text('An error occurred!'),
+            );
+          else
+            // Use a consumer of the Orders data in here
+            // In that case here, because only here I'm interested in order data.
+            return Consumer<Orders>(
+              // It will really jsut rebuild the parts that do need rebuilding.
+              builder: (context, orderData, child) => ListView.builder(
+                itemCount: orderData.orders.length,
+                itemBuilder: (context, index) =>
+                    OrderItem(orderData.orders[index]),
+              ),
+            );
+        },
+      ),
     );
   }
 }
