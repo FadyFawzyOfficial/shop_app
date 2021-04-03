@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shop_app/models/http_exception.dart';
 
 class Auth with ChangeNotifier {
   String _token;
@@ -13,15 +14,25 @@ class Auth with ChangeNotifier {
     final url =
         'https://identitytoolkit.googleapis.com/v1/accounts:$urlSegment?key=AIzaSyAzJJMVEpY26L0Zr9QjmZpW1ab1H2VTWuc';
 
-    final response = await http.post(
-      url,
-      body: json.encode({
-        'email': email,
-        'password': password,
-        'returnSecureToken': true,
-      }),
-    );
-    print(json.decode(response.body));
+    try {
+      final response = await http.post(
+        url,
+        body: json.encode({
+          'email': email,
+          'password': password,
+          'returnSecureToken': true,
+        }),
+      );
+      final responseBody = json.decode(response.body);
+      if (responseBody['error'] != null)
+        // What's the idea behind throwing an exception here?
+        // We can of course now manage or handle that exception in the AuthScreen
+        // which is where we're in the widget and where we can present something
+        // to the user, show an alert to the user for example.
+        throw HttpException(responseBody['error']['message']);
+    } catch (error) {
+      throw error;
+    }
   }
 
   Future<void> signUp(String email, String password) async {
