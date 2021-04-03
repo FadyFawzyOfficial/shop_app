@@ -9,6 +9,15 @@ class Auth with ChangeNotifier {
   DateTime _expiryDate;
   String _userId;
 
+  bool get isAuthenticated => token != null;
+
+  String get token {
+    if (_token != null &&
+        _expiryDate != null &&
+        _expiryDate.isAfter(DateTime.now())) return _token;
+    return null;
+  }
+
   Future<void> _authenticate(
       String email, String password, String urlSegment) async {
     final url =
@@ -30,6 +39,12 @@ class Auth with ChangeNotifier {
         // which is where we're in the widget and where we can present something
         // to the user, show an alert to the user for example.
         throw HttpException(responseBody['error']['message']);
+
+      _token = responseBody['idToken'];
+      _userId = responseBody['localId'];
+      _expiryDate = DateTime.now()
+          .add(Duration(seconds: int.parse(responseBody['expiresIn'])));
+      notifyListeners();
     } catch (error) {
       throw error;
     }
