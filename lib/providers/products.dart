@@ -6,6 +6,9 @@ import 'package:shop_app/models/http_exception.dart';
 import 'package:shop_app/providers/product.dart';
 
 class Products with ChangeNotifier {
+  static const productsUrl =
+      'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products.json';
+
   List<Product> _items = [
     // Product(
     //   id: 'p1',
@@ -41,10 +44,11 @@ class Products with ChangeNotifier {
     // ),
   ];
 
-  static const url =
-      'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products.json';
-
   // var _showFavoritesOnly = false;
+
+  final String authToken;
+
+  Products(this.authToken, this._items);
 
   List<Product> get items {
     // if (_showFavoritesOnly)
@@ -71,6 +75,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> fetchAndSetProducts() async {
+    final url = '$productsUrl?auth=$authToken';
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
@@ -106,7 +111,7 @@ class Products with ChangeNotifier {
       // We don't have to return future anymore because we automatically have this all wrapped
       // into a future and that future will also be returned automatically,
       final response = await http.post(
-        url,
+        productsUrl,
         body: json.encode({
           'title': product.title,
           'description': product.description,
