@@ -107,11 +107,12 @@ class Products with ChangeNotifier {
   // When using async, the function which you use it always returns a future,
   // that future meight then not yield anything in the end but it always returns a future
   Future<void> addProduct(Product product) async {
+    final url = '$productsUrl?auth=$authToken';
     try {
       // We don't have to return future anymore because we automatically have this all wrapped
       // into a future and that future will also be returned automatically,
       final response = await http.post(
-        productsUrl,
+        url,
         body: json.encode({
           'title': product.title,
           'description': product.description,
@@ -145,7 +146,7 @@ class Products with ChangeNotifier {
       // const here anymore though, we have to use final.
       // Because this will only be final at runtime.
       final url =
-          'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json';
+          'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json?auth=$authToken';
       await http.patch(
         url,
         body: json.encode({
@@ -169,7 +170,7 @@ class Products with ChangeNotifier {
     // execution until this is done and moves ahead to this line before we have
     // a response from the server.
     final url =
-        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json';
+        'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json?auth=$authToken';
     final existingProductIndex =
         _items.indexWhere((product) => product.id == id);
     var existingProduct = _items[existingProductIndex];
@@ -206,7 +207,7 @@ class Products with ChangeNotifier {
     if (productIndex >= 0) {
       _toggleProductFavoriteStatus(product);
       final url =
-          'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json';
+          'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json?auth=$authToken';
       final response = await http.patch(
         url,
         body: json.encode(
