@@ -62,8 +62,14 @@ class MyApp extends StatelessWidget {
           // (is recommended more than .value Constructor)
           create: (BuildContext context) => Cart(),
         ),
-        ChangeNotifierProvider(
-          create: (BuildContext context) => Orders(),
+        // 1st Generic Type (Auth): is our dependency.
+        // 2nd Generic Type (Orders): is the value we're about to provide.
+        ChangeNotifierProxyProvider<Auth, Orders>(
+          create: null,
+          update: (context, auth, previousOrders) => Orders(
+            auth.token,
+            previousOrders == null ? [] : previousOrders.orders,
+          ),
         ),
       ],
       child: Consumer<Auth>(
