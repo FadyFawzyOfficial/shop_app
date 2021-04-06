@@ -47,8 +47,9 @@ class Products with ChangeNotifier {
   // var _showFavoritesOnly = false;
 
   final String authToken;
+  final String authUserId;
 
-  Products(this.authToken, this._items);
+  Products(this.authToken, this.authUserId, this._items);
 
   List<Product> get items {
     // if (_showFavoritesOnly)
@@ -75,7 +76,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> fetchAndSetProducts() async {
-    final url = '$productsUrl?auth=$authToken';
+    var url = '$productsUrl?auth=$authToken';
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
@@ -83,6 +84,19 @@ class Products with ChangeNotifier {
       // So that the following code doesn't run if extracted data is null and
       // return here to avoid that you run code which would fail if you have no data.
       if (extractedData == null) return;
+
+      // When we fetch products, we of course also want to fetch data for the
+      // favorite status according to each user.
+      // So, We also fetch the favorite statuses before I transform products data.
+      // Here because: I don't want to do that if we have no products.
+      // So, I'll wait for the previous check (if statement).
+
+      // It's time for antoher request where we get our favorite response.
+      url =
+          'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/userFavorites/$authUserId.json?auth=$authToken';
+      final favoriteResponse = await http.get(url);
+      final favoriteData = json.decode(favoriteResponse.body);
+      print(favoriteData);
 
       final List<Product> loadedProducts = [];
       extractedData.forEach((key, value) {
@@ -93,7 +107,16 @@ class Products with ChangeNotifier {
             description: value['description'],
             price: value['price'].toDouble(),
             imageUrl: value['imageUrl'],
-            isFavorite: value['isFavorite'],
+            // If favoriteData is null, then this user has never favorited anything.
+            // So then obviously every product will just be not a favorite, so we
+            // set this to false.
+            // If favoriteData isn't null, then the user has some favorite data
+            // we can check for that productId(key here), but that productId still
+            // might not exist (null). So, I want to user an alternative value if
+            // it is null. With double question mark operator to use that value
+            // and if it is null it will fallback to the value after the ?? marks.
+            isFavorite:
+                favoriteData == null ? false : favoriteData[key] ?? false,
           ),
         );
       });
@@ -118,7 +141,6 @@ class Products with ChangeNotifier {
           'description': product.description,
           'imageUrl': product.imageUrl,
           'price': product.price,
-          'isFavorite': product.isFavorite,
         }),
       );
       // print(json.decode(response.body));
@@ -154,7 +176,6 @@ class Products with ChangeNotifier {
           'description': newProduct.description,
           'imageUrl': newProduct.imageUrl,
           'price': newProduct.price,
-          'isFavorite': newProduct.isFavorite,
         }),
       );
       _items[productIndex] = newProduct;
@@ -199,22 +220,19 @@ class Products with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateFavoriteStatus(String id) async {
+  Future<void> updateFavoriteStatus(String productId) async {
     // Get the index of the product with the given id
-    final productIndex = _items.indexWhere((product) => product.id == id);
+    final productIndex =
+        _items.indexWhere((product) => product.id == productId);
     var product = _items[productIndex];
     // Check that if the product in the list or not?
     if (productIndex >= 0) {
       _toggleProductFavoriteStatus(product);
       final url =
-          'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json?auth=$authToken';
-      final response = await http.patch(
+          'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/userFavorites/$authUserId/$productId.json?auth=$authToken';
+      final response = await http.put(
         url,
-        body: json.encode(
-          {
-            'isFavorite': product.isFavorite,
-          },
-        ),
+        body: json.encode(product.isFavorite),
       );
       // The HTTP package only throws its own error for get and post requests
       // if the server returns an error status code.
