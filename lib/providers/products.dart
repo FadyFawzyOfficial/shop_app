@@ -76,7 +76,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> fetchAndSetProducts() async {
-    var url = '$productsUrl?auth=$authToken';
+    var url =
+        '$productsUrl?auth=$authToken&orderBy="ownerId"&equalTo="$authUserId"';
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
@@ -141,6 +142,7 @@ class Products with ChangeNotifier {
           'description': product.description,
           'imageUrl': product.imageUrl,
           'price': product.price,
+          'ownerId': authUserId,
         }),
       );
       // print(json.decode(response.body));
