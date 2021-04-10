@@ -75,9 +75,10 @@ class Products with ChangeNotifier {
     return _items.firstWhere((product) => product.id == id);
   }
 
-  Future<void> fetchAndSetProducts() async {
-    var url =
-        '$productsUrl?auth=$authToken&orderBy="ownerId"&equalTo="$authUserId"';
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    final filterSegment =
+        filterByUser ? '&orderBy="ownerId"&equalTo="$authUserId"' : '';
+    var url = '$productsUrl?auth=$authToken$filterSegment';
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
