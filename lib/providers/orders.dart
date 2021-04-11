@@ -19,14 +19,15 @@ class OrderItem {
 }
 
 class Orders with ChangeNotifier {
-  static const ordersUrl =
-      'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app/orders.json';
+  static const baseUrl =
+      'https://shop-app-462f5-default-rtdb.europe-west1.firebasedatabase.app';
 
   final String authToken;
+  final String authUserId;
 
   List<OrderItem> _orders = [];
 
-  Orders(this.authToken, this._orders);
+  Orders(this.authToken, this.authUserId, this._orders);
 
   List<OrderItem> get orders {
     return [..._orders];
@@ -34,7 +35,8 @@ class Orders with ChangeNotifier {
 
   Future<void> fetchOrders() async {
     try {
-      final response = await http.get('$ordersUrl?auth=$authToken');
+      final response =
+          await http.get('$baseUrl/orders/$authUserId.json?auth=$authToken');
       // print(json.decode(response.body));
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
 
@@ -72,7 +74,7 @@ class Orders with ChangeNotifier {
     // into a future and that future will also be returned automatically,
     try {
       final response = await http.post(
-        '$ordersUrl?auth=$authToken',
+        '$baseUrl/orders/$authUserId.json?auth=$authToken',
         body: json.encode({
           'amount': total,
           'products': List<dynamic>.from(
