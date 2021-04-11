@@ -10,6 +10,7 @@ import 'package:shop_app/screens/edit_product_screen.dart';
 import 'package:shop_app/screens/orders_screen.dart';
 import 'package:shop_app/screens/product_detail_screen.dart';
 import 'package:shop_app/screens/products_overview_screen.dart';
+import 'package:shop_app/screens/splash_screen.dart';
 import 'package:shop_app/screens/user_products_screen.dart';
 
 void main() => runApp(MyApp());
@@ -82,7 +83,35 @@ class MyApp extends StatelessWidget {
             fontFamily: 'Lato',
             visualDensity: VisualDensity.adaptivePlatformDensity,
           ),
-          home: auth.isAuthenticated ? ProductsOverviewScreen() : AuthScreen(),
+          // Home Screen depends on the question whether we're authenticated or not.
+          // Now here, if we're not authenticated, I don't automatically want to
+          // show the AuthScreen(), I instead want to try logging in.
+          // We can do that with the FutureBuilder()
+          home: auth.isAuthenticated
+              ? ProductsOverviewScreen()
+              :
+              // If we're not logged in,
+              FutureBuilder(
+                  // Future I want to use here is taken from my auth object.
+                  // That future will in the end yeild true or false.
+                  future: auth.tryAutoLogin(),
+                  builder: (context, authResultSnapshot) =>
+                      // Now, we can check the authResultSnapshot here
+                      authResultSnapshot.connectionState ==
+                              ConnectionState.waiting
+                          ?
+                          // Then I want to show the splash screen (waiting screen).
+                          // for a short period where we're not yet decided whether
+                          // we're logged in or not.
+                          // Because it's not the best user experience if we show
+                          // the AuthScreen where the user might start entering data
+                          // ant hen suddenly we see oh the user is logged in and
+                          // we present a totally different screen.
+                          SplashScreen()
+                          :
+                          // Show the AuthScreen only for not waiting.
+                          AuthScreen(),
+                ),
           routes: {
             ProductDetailScreen.routeName: (context) => ProductDetailScreen(),
             CartScreen.routeName: (context) => CartScreen(),

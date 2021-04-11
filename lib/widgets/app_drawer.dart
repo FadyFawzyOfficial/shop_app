@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop_app/providers/auth.dart';
-import 'package:shop_app/screens/auth_screen.dart';
 import 'package:shop_app/screens/orders_screen.dart';
 import 'package:shop_app/screens/user_products_screen.dart';
 
@@ -42,6 +41,11 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               // Close that drawer before logout
               Navigator.of(context).pop();
+              // Just recommended:
+              // Simply always go to home route(slash) to ensure that you never
+              // have unexpected behaviors when logging out.
+              // Since you always go there.
+              Navigator.of(context).pushReplacementNamed('/');
               Provider.of<Auth>(context, listen: false).logout();
             },
           ),
