@@ -89,7 +89,15 @@ class AuthCard extends StatefulWidget {
   _AuthCardState createState() => _AuthCardState();
 }
 
-class _AuthCardState extends State<AuthCard> {
+// And for this (Animation) to work, I just need to add a mixin, so we add the with
+// keyword after extening the State and what I import here is the
+// SingleTickerProviderStateMixin: it's simply adds a couple of methods and
+// properties which is then implicitly used by vsync or by the animation
+// controller to find out whether it's currently visible and so on.
+// It also lets our widget know when a frame update is due -
+// animations need that information to play smoothly.
+class _AuthCardState extends State<AuthCard>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey();
   AuthMode _authMode = AuthMode.Login;
   Map<String, String> _authData = {
@@ -98,6 +106,67 @@ class _AuthCardState extends State<AuthCard> {
   };
   var _isLoading = false;
   final _passwordController = TextEditingController();
+
+  AnimationController _animationController;
+  Animation<Size> _heightAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    // vsync basically is an argument where we give the animation controller
+    // a pointer at the object, the widget in the end which it should watch
+    // and only when that widget is really wisible on the screen, the animation
+    // should play. So, this otpimizes performance because it ensures that we
+    // really only animate what's visible to the user.
+    // So I want to point at these widgets or at this state object which belongs
+    // to a widget of course which has a build method.
+    _animationController = AnimationController(
+      vsync: this,
+      // Duration for animations. You don't want to make this too long of course,
+      // users shouldn't wait for that to finish.
+      // It just should be long enough to show the user what happened without
+      // blocking user input.
+      duration: Duration(milliseconds: 500),
+    );
+
+    // Fot the animation itself, for the height animation is setup by the Tween class.
+    // The Tween class gives you an object which in the end knows how to animate
+    // between two values.
+    // Tween itself doesn't give us an animation though, it just has information
+    // on how to animate between 2 values to create an animated object based on
+    // this you have to call animate() method, and now pass in an animation
+    // object which will basiclly wrap itself around this information on what to
+    // animate and the animation object describes how to animate it.
+    _heightAnimation = Tween<Size>(
+      begin: Size(double.infinity, 260),
+      end: Size(double.infinity, 320),
+    ).animate(
+      // CurvedAnimation now also needs to be configured, you need to inform this
+      // CurvedAnimation what its parent is and that simply is the controller
+      // by which it should be controlled
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.linear,
+      ),
+    );
+
+    // We also have to go to the place where we define the height animation,
+    // so in the initState and there, we also now need to add a listener to call
+    // setState() whenever this updates and it should update whenever it redraws
+    // the screen. So here in the end, we just have an anonymous function in which
+    // we call setState to set state, we can pass an empty update function because
+    // there isn't really something I want to update, I just want to rerun the
+    // build method to redraw the screen.
+    _heightAnimation.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    // We should call controller dispose to make sure that we clean the listener
+    // ans so on.
+    _animationController.dispose();
+    super.dispose();
+  }
 
   void _showErrorDialog(String errorMessage) {
     showDialog(
@@ -169,15 +238,20 @@ class _AuthCardState extends State<AuthCard> {
     });
   }
 
+  // But of course we now need to kick off this animation and we do that in
+  // switchAuthMode(). Instead of just switching the auth mode here, we want to
+  // make user that when do go to the sign up mode, we increase the height and
+  // therefore we should use our controller here and call forward,
+  // forward starts the animation.
+  // Now and once you're done, you want out play that back, so controller.reverse.
   void _switchAuthMode() {
-    if (_authMode == AuthMode.Login)
-      setState(() {
-        _authMode = AuthMode.Signup;
-      });
-    else
-      setState(() {
-        _authMode = AuthMode.Login;
-      });
+    if (_authMode == AuthMode.Login) {
+      setState(() => _authMode = AuthMode.Signup);
+      _animationController.forward();
+    } else {
+      setState(() => _authMode = AuthMode.Login);
+      _animationController.reverse();
+    }
   }
 
   @override
@@ -187,10 +261,15 @@ class _AuthCardState extends State<AuthCard> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       elevation: 8,
       child: Container(
-        height: _authMode == AuthMode.Signup ? 320 : 260,
+        // height: _authMode == AuthMode.Signup ? 320 : 260,
+        // We do connect animation here to this container by no longer having our
+        // if condition, instead we assign this to heightAnimation.value.height.
+        // This will change over time as soon as we start the animation.
+        // The difference to the old code is that we don't suddenly change from
+        // 260 to 320 instead we smoothly animate there.
+        height: _heightAnimation.value.height,
         width: deviceSize.width * 0.75,
-        constraints:
-            BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
+        constraints: BoxConstraints(minHeight: _heightAnimation.value.height),
         padding: EdgeInsets.all(16),
         child: Form(
           key: _formKey,
