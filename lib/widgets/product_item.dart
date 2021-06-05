@@ -28,9 +28,23 @@ class ProductItem extends StatelessWidget {
               arguments: product.id,
             );
           },
-          child: Image.network(
-            product.imageUrl,
-            fit: BoxFit.cover,
+          child: Hero(
+            // The Hero widget (important) needs a tag this tag is then used on
+            // the new page which is loaded because the hero animation is always
+            // used between 2 different pages, 2 different screens.
+            // Can be any tag you want, I'll use the product ID, it should be unique
+            tag: product.id,
+            child: FadeInImage(
+              // This widget fades in your image once it's there and it allows you
+              // to define a placeholder takes an image provider and image which is
+              // the image you actually want to render once it's done loading that image.
+              // With that, Flutter will automate if you wait until this has been
+              // downloaded before it then shows it and it will nicely animate it
+              // in automatically, so it has a fade in animation baked in.
+              placeholder: AssetImage('assets/images/product_placeholder.png'),
+              image: NetworkImage(product.imageUrl),
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         footer: GridTileBar(
