@@ -112,7 +112,7 @@ class _AuthCardState extends State<AuthCard>
   // Just leave them here because we will need them later,
   // But for AnimatedContainer, we don't need it.
   AnimationController _animationController;
-  Animation<Size> _heightAnimation;
+  Animation<Offset> _slideAnimation;
   Animation<double> _opacityAnimation;
 
   @override
@@ -142,9 +142,9 @@ class _AuthCardState extends State<AuthCard>
     // this you have to call animate() method, and now pass in an animation
     // object which will basiclly wrap itself around this information on what to
     // animate and the animation object describes how to animate it.
-    _heightAnimation = Tween<Size>(
-      begin: Size(double.infinity, 260),
-      end: Size(double.infinity, 320),
+    _slideAnimation = Tween<Offset>(
+      begin: Offset(0, -2),
+      end: Offset(0, 0),
     ).animate(
       // CurvedAnimation now also needs to be configured, you need to inform this
       // CurvedAnimation what its parent is and that simply is the controller
@@ -339,27 +339,34 @@ class _AuthCardState extends State<AuthCard>
                     minHeight: _authMode == AuthMode.Signup ? 60 : 0,
                     maxHeight: _authMode == AuthMode.Signup ? 120 : 0,
                   ),
-                  // Solwly animate the Confirm Password TextFormField and maybe
-                  // slide down and fade in, so that it looks like it's coming from
-                  // behind the Password TextFormField.
-                  // FadeTransition unlike the AnimatedContainer, does not take
-                  // a duration and a curve, instead this needs an opacity and
-                  // you need to change that opacity dynamically with the help of
-                  // an animation and animation controller
-                  child: FadeTransition(
-                    opacity: _opacityAnimation,
-                    child: TextFormField(
-                      enabled: _authMode == AuthMode.Signup,
-                      decoration:
-                          InputDecoration(labelText: 'Confirm Password'),
-                      obscureText: true,
-                      validator: _authMode == AuthMode.Signup
-                          ? (value) {
-                              return value != _passwordController.text
-                                  ? 'Passwords do not match!'
-                                  : null;
-                            }
-                          : null,
+                  // Now if you also want a more detailed sliding animation for
+                  // the ConfirmPassword TextFormField, you can also wrap the
+                  // FadeTransition with another transition (SlideTransition).
+                  // We can use that to let that widgete slide.
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    // Solwly animate the Confirm Password TextFormField and maybe
+                    // slide down and fade in, so that it looks like it's coming from
+                    // behind the Password TextFormField.
+                    // FadeTransition unlike the AnimatedContainer, does not take
+                    // a duration and a curve, instead this needs an opacity and
+                    // you need to change that opacity dynamically with the help of
+                    // an animation and animation controller.
+                    child: FadeTransition(
+                      opacity: _opacityAnimation,
+                      child: TextFormField(
+                        enabled: _authMode == AuthMode.Signup,
+                        decoration:
+                            InputDecoration(labelText: 'Confirm Password'),
+                        obscureText: true,
+                        validator: _authMode == AuthMode.Signup
+                            ? (value) {
+                                return value != _passwordController.text
+                                    ? 'Passwords do not match!'
+                                    : null;
+                              }
+                            : null,
+                      ),
                     ),
                   ),
                 ),
