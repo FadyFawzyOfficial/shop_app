@@ -27,43 +27,41 @@ class _OrderItemState extends State<OrderItem> {
                 DateFormat('dd MMM, yyyy hh:mm').format(widget.order.dateTime)),
             trailing: IconButton(
               icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
-              onPressed: () {
-                setState(() {
-                  _expanded = !_expanded;
-                });
-              },
+              onPressed: () => setState(() => _expanded = !_expanded),
             ),
           ),
-          if (_expanded)
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              height: min(widget.order.products.length * 20.0 + 25, 100),
-              child: ListView(
-                children: widget.order.products
-                    .map(
-                      (product) => Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            product.title,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+          AnimatedContainer(
+            duration: Duration(milliseconds: 300),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            height: _expanded
+                ? min(widget.order.products.length * 20.0 + 25, 125)
+                : 0,
+            child: ListView(
+              children: widget.order.products
+                  .map(
+                    (product) => Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          product.title,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
-                          Text(
-                            '${product.quantity} x \$${product.price}',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.grey,
-                            ),
+                        ),
+                        Text(
+                          '${product.quantity} x \$${product.price}',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey,
                           ),
-                        ],
-                      ),
-                    )
-                    .toList(),
-              ),
-            )
+                        ),
+                      ],
+                    ),
+                  )
+                  .toList(),
+            ),
+          )
         ],
       ),
     );
