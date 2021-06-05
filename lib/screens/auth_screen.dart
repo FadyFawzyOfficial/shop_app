@@ -89,7 +89,15 @@ class AuthCard extends StatefulWidget {
   _AuthCardState createState() => _AuthCardState();
 }
 
-class _AuthCardState extends State<AuthCard> {
+// And for this (Animation) to work, I just need to add a mixin, so we add the with
+// keyword after extening the State and what I import here is the
+// SingleTickerProviderStateMixin: it's simply adds a couple of methods and
+// properties which is then implicitly used by vsync or by the animation
+// controller to find out whether it's currently visible and so on.
+// It also lets our widget know when a frame update is due -
+// animations need that information to play smoothly.
+class _AuthCardState extends State<AuthCard>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey();
   AuthMode _authMode = AuthMode.Login;
   Map<String, String> _authData = {
@@ -98,6 +106,84 @@ class _AuthCardState extends State<AuthCard> {
   };
   var _isLoading = false;
   final _passwordController = TextEditingController();
+
+  // For using AnimatedContainer we don't need the animation controller which
+  // setup hare and we don't need the height animation.
+  // Just leave them here because we will need them later,
+  // But for AnimatedContainer, we don't need it.
+  AnimationController _animationController;
+  Animation<Offset> _slideAnimation;
+  Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    // vsync basically is an argument where we give the animation controller
+    // a pointer at the object, the widget in the end which it should watch
+    // and only when that widget is really wisible on the screen, the animation
+    // should play. So, this otpimizes performance because it ensures that we
+    // really only animate what's visible to the user.
+    // So I want to point at these widgets or at this state object which belongs
+    // to a widget of course which has a build method.
+    _animationController = AnimationController(
+      vsync: this,
+      // Duration for animations. You don't want to make this too long of course,
+      // users shouldn't wait for that to finish.
+      // It just should be long enough to show the user what happened without
+      // blocking user input.
+      duration: Duration(milliseconds: 500),
+    );
+
+    // Fot the animation itself, for the height animation is setup by the Tween class.
+    // The Tween class gives you an object which in the end knows how to animate
+    // between two values.
+    // Tween itself doesn't give us an animation though, it just has information
+    // on how to animate between 2 values to create an animated object based on
+    // this you have to call animate() method, and now pass in an animation
+    // object which will basiclly wrap itself around this information on what to
+    // animate and the animation object describes how to animate it.
+    _slideAnimation = Tween<Offset>(
+      begin: Offset(0, -2),
+      end: Offset(0, 0),
+    ).animate(
+      // CurvedAnimation now also needs to be configured, you need to inform this
+      // CurvedAnimation what its parent is and that simply is the controller
+      // by which it should be controlled
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.linear,
+      ),
+    );
+
+    // We have an animation controller (_animationController),
+    // I jsut want to add a new animation, an animation where I animate the opacity.
+    _opacityAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeIn,
+      ),
+    );
+
+    // We also have to go to the place where we define the height animation,
+    // so in the initState and there, we also now need to add a listener to call
+    // setState() whenever this updates and it should update whenever it redraws
+    // the screen. So here in the end, we just have an anonymous function in which
+    // we call setState to set state, we can pass an empty update function because
+    // there isn't really something I want to update, I just want to rerun the
+    // build method to redraw the screen.
+    // _heightAnimation.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    // We should call controller dispose to make sure that we clean the listener
+    // ans so on.
+    _animationController.dispose();
+    super.dispose();
+  }
 
   void _showErrorDialog(String errorMessage) {
     showDialog(
@@ -169,15 +255,20 @@ class _AuthCardState extends State<AuthCard> {
     });
   }
 
+  // But of course we now need to kick off this animation and we do that in
+  // switchAuthMode(). Instead of just switching the auth mode here, we want to
+  // make user that when do go to the sign up mode, we increase the height and
+  // therefore we should use our controller here and call forward,
+  // forward starts the animation.
+  // Now and once you're done, you want out play that back, so controller.reverse.
   void _switchAuthMode() {
-    if (_authMode == AuthMode.Login)
-      setState(() {
-        _authMode = AuthMode.Signup;
-      });
-    else
-      setState(() {
-        _authMode = AuthMode.Login;
-      });
+    if (_authMode == AuthMode.Login) {
+      setState(() => _authMode = AuthMode.Signup);
+      _animationController.forward();
+    } else {
+      setState(() => _authMode = AuthMode.Login);
+      _animationController.reverse();
+    }
   }
 
   @override
@@ -186,7 +277,26 @@ class _AuthCardState extends State<AuthCard> {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       elevation: 8,
-      child: Container(
+      // For common things like changing the container,dimensions or chaning a
+      // container look, in general Flutter has an even better built-in widget
+      // ant that the AnimatedContainer.
+      // How does animated container work? AnimatedContainer has all the heavy
+      //lifting built-in, so efficiently running an animation and it automatically
+      // transitions between changes in its configration.
+      // Since the AnimdatedContainer controls the entire animation, you don't
+      // even need your own controller there because it kicks off the animation
+      // and reverses it on its own, basically whenever these values changes and
+      // you just need to tell it over which duration it should animate.
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeIn,
+        // Go back to old height setup here where we actually switch this when
+        // the auth mode changes.
+        // When we go back to that, AnimatedContainer will not do the same normal
+        // container does and make a hard switch between these values but instread,
+        // it will automatically detect that that value changed and will smoothly
+        // animate between the values and that does not just work fot height or
+        // width but for things like padding and so on as well.
         height: _authMode == AuthMode.Signup ? 320 : 260,
         width: deviceSize.width * 0.75,
         constraints:
@@ -218,19 +328,48 @@ class _AuthCardState extends State<AuthCard> {
                   },
                   onSaved: (value) => _authData['password'] = value,
                 ),
-                if (_authMode == AuthMode.Signup)
-                  TextFormField(
-                    enabled: _authMode == AuthMode.Signup,
-                    decoration: InputDecoration(labelText: 'Confirm Password'),
-                    obscureText: true,
-                    validator: _authMode == AuthMode.Signup
-                        ? (value) {
-                            return value != _passwordController.text
-                                ? 'Passwords do not match!'
-                                : null;
-                          }
-                        : null,
+                // Wrap the FadeTransition into AnimatedContainer which we actually
+                // shrink to a height of zero when it should not be visible, and
+                // give it a more appropritate height that leaves enough space for
+                // the TextFormField when it should be visible.
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 500),
+                  curve: Curves.easeIn,
+                  constraints: BoxConstraints(
+                    minHeight: _authMode == AuthMode.Signup ? 60 : 0,
+                    maxHeight: _authMode == AuthMode.Signup ? 120 : 0,
                   ),
+                  // Now if you also want a more detailed sliding animation for
+                  // the ConfirmPassword TextFormField, you can also wrap the
+                  // FadeTransition with another transition (SlideTransition).
+                  // We can use that to let that widgete slide.
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    // Solwly animate the Confirm Password TextFormField and maybe
+                    // slide down and fade in, so that it looks like it's coming from
+                    // behind the Password TextFormField.
+                    // FadeTransition unlike the AnimatedContainer, does not take
+                    // a duration and a curve, instead this needs an opacity and
+                    // you need to change that opacity dynamically with the help of
+                    // an animation and animation controller.
+                    child: FadeTransition(
+                      opacity: _opacityAnimation,
+                      child: TextFormField(
+                        enabled: _authMode == AuthMode.Signup,
+                        decoration:
+                            InputDecoration(labelText: 'Confirm Password'),
+                        obscureText: true,
+                        validator: _authMode == AuthMode.Signup
+                            ? (value) {
+                                return value != _passwordController.text
+                                    ? 'Passwords do not match!'
+                                    : null;
+                              }
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
                 SizedBox(height: 20),
                 _isLoading
                     ? CircularProgressIndicator()
