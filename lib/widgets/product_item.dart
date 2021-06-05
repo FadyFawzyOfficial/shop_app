@@ -28,8 +28,15 @@ class ProductItem extends StatelessWidget {
               arguments: product.id,
             );
           },
-          child: Image.network(
-            product.imageUrl,
+          child: FadeInImage(
+            // This widget fades in your image once it's there and it allows you
+            // to define a placeholder takes an image provider and image which is
+            // the image you actually want to render once it's done loading that image.
+            // With that, Flutter will automate if you wait until this has been
+            // downloaded before it then shows it and it will nicely animate it
+            // in automatically, so it has a fade in animation baked in.
+            placeholder: AssetImage('assets/images/product_placeholder.png'),
+            image: NetworkImage(product.imageUrl),
             fit: BoxFit.cover,
           ),
         ),
