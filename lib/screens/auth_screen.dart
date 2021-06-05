@@ -107,6 +107,10 @@ class _AuthCardState extends State<AuthCard>
   var _isLoading = false;
   final _passwordController = TextEditingController();
 
+  // For using AnimatedContainer we don't need the animation controller which
+  // setup hare and we don't need the height animation.
+  // Just leave them here because we will need them later,
+  // But for AnimatedContainer, we don't need it.
   AnimationController _animationController;
   Animation<Size> _heightAnimation;
 
@@ -260,46 +264,31 @@ class _AuthCardState extends State<AuthCard>
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       elevation: 8,
-      // So instead of manually managing our animation here with the listener
-      // and calling setState and therefore running the full build method here
-      // of the widget, of the auth card here for every change, we can fall back
-      // to a built-in widget (AnimatedBuilder). In the end, it's the container
-      // here which we want to change for every change in our animation or for
-      // every frame on our screen.
-
-      // The idea (of Builders) always is that Flutter executes something for you
-      // and then rebuilds a part of the UI (user interface), a part of this widget
-      // tree when that something is done or when that something changes instead
-      // of the entire widget tree.
-
-      // In a more efficient way because everything inside of that container,
-      // so the TextFormFields and the buttons and so on will not re-render
-      // for every frame, will not be rebuilt for every frame but instead,
-      // only the container, so the height therefore will change on every frame.
-      // Ant that's more efficient than re-rendering everything and we don't have
-      // to manually set up a listener for our animation. So AnimatedBuilder is
-      // already a very useful built-in widget Flutter ships with that helps us
-      // with efficiently controlling animations on a part of our screen.
-      child: AnimatedBuilder(
-        animation: _heightAnimation,
-        builder: (BuildContext context, Widget child) => Container(
-          // height: _authMode == AuthMode.Signup ? 320 : 260,
-          // We do connect animation here to this container by no longer having our
-          // if condition, instead we assign this to heightAnimation.value.height.
-          // This will change over time as soon as we start the animation.
-          // The difference to the old code is that we don't suddenly change from
-          // 260 to 320 instead we smoothly animate there.
-          height: _heightAnimation.value.height,
-          width: deviceSize.width * 0.75,
-          constraints: BoxConstraints(minHeight: _heightAnimation.value.height),
-          padding: EdgeInsets.all(16), child: child,
-        ),
-        // To the animated builder, you can also pass a child argument, so besides
-        // animation and builder, you can pass in a child argument and that can
-        // be a part of that widget tree which should be nested into that widget
-        // tree you are rebuilding with builder which then actually won't be rebuilt.
-        // Our form herre and everything that's in the form, that does not change
-        // when we animate the container.
+      // For common things like changing the container,dimensions or chaning a
+      // container look, in general Flutter has an even better built-in widget
+      // ant that the AnimatedContainer.
+      // How does animated container work? AnimatedContainer has all the heavy
+      //lifting built-in, so efficiently running an animation and it automatically
+      // transitions between changes in its configration.
+      // Since the AnimdatedContainer controls the entire animation, you don't
+      // even need your own controller there because it kicks off the animation
+      // and reverses it on its own, basically whenever these values changes and
+      // you just need to tell it over which duration it should animate.
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeIn,
+        // Go back to old height setup here where we actually switch this when
+        // the auth mode changes.
+        // When we go back to that, AnimatedContainer will not do the same normal
+        // container does and make a hard switch between these values but instread,
+        // it will automatically detect that that value changed and will smoothly
+        // animate between the values and that does not just work fot height or
+        // width but for things like padding and so on as well.
+        height: _authMode == AuthMode.Signup ? 320 : 260,
+        width: deviceSize.width * 0.75,
+        constraints:
+            BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
+        padding: EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
