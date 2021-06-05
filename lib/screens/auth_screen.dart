@@ -113,6 +113,7 @@ class _AuthCardState extends State<AuthCard>
   // But for AnimatedContainer, we don't need it.
   AnimationController _animationController;
   Animation<Size> _heightAnimation;
+  Animation<double> _opacityAnimation;
 
   @override
   void initState() {
@@ -151,6 +152,18 @@ class _AuthCardState extends State<AuthCard>
       CurvedAnimation(
         parent: _animationController,
         curve: Curves.linear,
+      ),
+    );
+
+    // We have an animation controller (_animationController),
+    // I jsut want to add a new animation, an animation where I animate the opacity.
+    _opacityAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeIn,
       ),
     );
 
@@ -315,19 +328,41 @@ class _AuthCardState extends State<AuthCard>
                   },
                   onSaved: (value) => _authData['password'] = value,
                 ),
-                if (_authMode == AuthMode.Signup)
-                  TextFormField(
-                    enabled: _authMode == AuthMode.Signup,
-                    decoration: InputDecoration(labelText: 'Confirm Password'),
-                    obscureText: true,
-                    validator: _authMode == AuthMode.Signup
-                        ? (value) {
-                            return value != _passwordController.text
-                                ? 'Passwords do not match!'
-                                : null;
-                          }
-                        : null,
+                // Wrap the FadeTransition into AnimatedContainer which we actually
+                // shrink to a height of zero when it should not be visible, and
+                // give it a more appropritate height that leaves enough space for
+                // the TextFormField when it should be visible.
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 500),
+                  curve: Curves.easeIn,
+                  constraints: BoxConstraints(
+                    minHeight: _authMode == AuthMode.Signup ? 60 : 0,
+                    maxHeight: _authMode == AuthMode.Signup ? 120 : 0,
                   ),
+                  // Solwly animate the Confirm Password TextFormField and maybe
+                  // slide down and fade in, so that it looks like it's coming from
+                  // behind the Password TextFormField.
+                  // FadeTransition unlike the AnimatedContainer, does not take
+                  // a duration and a curve, instead this needs an opacity and
+                  // you need to change that opacity dynamically with the help of
+                  // an animation and animation controller
+                  child: FadeTransition(
+                    opacity: _opacityAnimation,
+                    child: TextFormField(
+                      enabled: _authMode == AuthMode.Signup,
+                      decoration:
+                          InputDecoration(labelText: 'Confirm Password'),
+                      obscureText: true,
+                      validator: _authMode == AuthMode.Signup
+                          ? (value) {
+                              return value != _passwordController.text
+                                  ? 'Passwords do not match!'
+                                  : null;
+                            }
+                          : null,
+                    ),
+                  ),
+                ),
                 SizedBox(height: 20),
                 _isLoading
                     ? CircularProgressIndicator()
