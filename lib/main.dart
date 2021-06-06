@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shop_app/helpers/custom_route.dart';
 import 'package:shop_app/providers/auth.dart';
 import 'package:shop_app/providers/cart.dart';
 import 'package:shop_app/providers/orders.dart';
@@ -81,6 +82,19 @@ class MyApp extends StatelessWidget {
             primarySwatch: Colors.purple,
             accentColor: Colors.deepOrange,
             fontFamily: 'Lato',
+            // If you want to apply (the CustomRoute) to all routes including
+            // named routes, you can set a pageTransitionTheme, this takes a page
+            // transition theme where you set up some builders.
+            // Now builders is a map and that is a map of different builder
+            // functions for different operating systems (Andoird, iOS).
+            // Now you should actually have that fade transiton for every route
+            // change.
+            pageTransitionsTheme: PageTransitionsTheme(
+              builders: {
+                TargetPlatform.android: CustomPageTransitionBuilder(),
+                TargetPlatform.iOS: CustomPageTransitionBuilder(),
+              },
+            ),
             visualDensity: VisualDensity.adaptivePlatformDensity,
           ),
           // Home Screen depends on the question whether we're authenticated or not.
